@@ -1,0 +1,87 @@
+Fichier listant les requetes cypher à executer séquentiellement, une à une.
+
+Essentiellement, pour éviter aux lecteurs qui liront l'article devant leur pc d'avoir à taper les requêtes.
+
+
+
+
+CREATE ( {name:"Anny"}),( {name:"JérômeB"}),( {name:"Alexis"}),( {name:"Nicolas"}),( {name:"JérômeM"}),( {name:"Corinne"})
+
+
+MATCH (n) RETURN n LIMIT 100
+
+
+MATCH (a),(j)
+WHERE j.name = 'JérômeB' AND a.name = 'Anny'
+CREATE (j)-[r:AMI]->(a)
+RETURN r;
+
+
+CREATE ( {name:"José",competences:"JavaEE|Java8|enseignement|formerPadawans"})
+
+
+MATCH (a {name:'Anny'}),(j {name:'José'})
+CREATE (a)-[:AMI]->(j)
+RETURN j;
+
+
+MATCH (j {name:"JérômeB"})-[:AMI]->()-[:AMI]->(aa) RETURN aa;
+
+
+MATCH (j {name:"JérômeB"})-[:AMI]->()-[:AMI]->()-[:AMI]->(aaa) RETURN aaa;
+
+
+MATCH (j {name:"JérômeB"})-[:AMI*3]->(aaa) RETURN aaa;
+
+
+MATCH (qq1)-[:AMI]->(qq2)
+WHERE qq1.name = 'José'
+RETURN qq2;
+
+
+MATCH (qq1)-[:AMI]-(qq2)
+WHERE qq1.name = 'José'
+RETURN qq2;
+
+MATCH (qq2)<-[:AMI]-(qq1)
+WHERE qq1.name = 'José'
+RETURN qq2;
+
+
+MATCH (josé)<-[:AMI]-(qui)-[:AMI]->(antonio)
+WHERE josé.name = 'José' AND  antonio.name='Antonio'
+RETURN qui;
+
+
+CREATE ( forgeron:Personne {name:"Antonio",competences:"JavaEE|Java8",cheveux:"longs"});
+
+
+MATCH (p) WHERE p.name='JérômeB' RETURN p; 
+
+
+
+MATCH (p:Personne) WHERE p.name='JérômeB' RETURN p; 
+
+
+
+CREATE (forgeron:Personne:JavaChampion {name:"Antonio",competences:"JavaEE|Java8",cheveux:"longs"}); 
+
+
+MATCH (jb{name:"JérômeB"}) SET jb.pseudo='wadael' RETURN jb;
+
+
+MATCH (jb{name:"JérômeB"}) DELETE jb;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
