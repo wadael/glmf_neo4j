@@ -1,0 +1,26 @@
+
+* Les départements de Bretagne
+
+MATCH (departement)-[SITUE_DANS]->(r:Region{name:"Bretagne"}) RETURN departement;
+
+* Le nombre de départements en Bretagne
+
+MATCH (departement)-[SITUE_DANS]->(r:Region{name:"Bretagne"}) RETURN  count(departement);
+
+
+* Quelle est la région du département 75 ?
+ MATCH (departement)-[SITUE_DANS]->(r:Region) WHERE departement.code = "75" RETURN r;
+ou
+ MATCH (departement{code:"75"})-[SITUE_DANS]->(r:Region) RETURN r;
+
+* Quels sont les autres départements de la région du département 56 ?
+ MATCH (departement:Departement)-[:SITUE_DANS]->(r:Region)<-[:SITUE_DANS]-(autre) WHERE departement.code="56"  RETURN autre;
+
+
+
+* Nombre de régions
+MATCH (r:Region) RETURN count(r);
+
+
+* Les régions, par ordre alphabétique 
+MATCH (r:Region) RETURN r ORDER BY r.name ;
