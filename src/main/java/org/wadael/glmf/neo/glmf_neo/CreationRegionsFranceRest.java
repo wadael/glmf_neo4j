@@ -1,5 +1,4 @@
-package org.wadael.glmf.neo.glmf_neo ;
-
+package org.wadael.glmf.neo.glmf_neo;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -18,81 +17,47 @@ import static org.wadael.glmf.neo.glmf_neo.CreationRegionsFranceRest.NosRelation
 /**
  * Creation des regions , update de leurs departements
  */
-
 public class CreationRegionsFranceRest {
 
-    	public static enum NosRelationshipTypes implements RelationshipType {
-		SITUE_DANS
-	}
-    
+    public static enum NosRelationshipTypes implements RelationshipType {
+        SITUE_DANS
+    }
+
     public static void main(String[] args) { // throws Exception {
+        GraphDatabaseService db = new RestGraphDatabase("http://localhost:7474/db/data");
+        Label labelDepartement = DynamicLabel.label("Departement");
+        Label labelRegion = DynamicLabel.label("Region");
 
-		Date deb = new Date();
-		GraphDatabaseService db = new RestGraphDatabase("http://localhost:7474/db/data");
+        HashMap<String, String> regions = FranceAdministrativeHelper.libellesRegionsParCodeInsee;
+        Node region = null;
+        Node departement = null;
 
-		Label labelDepartement = DynamicLabel.label("Departement");
-		Label labelRegion = DynamicLabel.label("Region");
+        for (String codeRegion : regions.keySet()) {
+            // creation région
+            try (Transaction tx = db.beginTx()) { // transaction sera fermée automatiquement
+                region = db.findNodesByLabelAndProperty(labelRegion, "code", codeRegion).iterator().next();
+            } catch (Exception pasTrouveException) {
+                region = db.createNode();
+                region.addLabel(labelRegion);
+                region.setProperty("code", codeRegion);
+                region.setProperty("name", regions.get(codeRegion));
+            }
+            // ses departements
+            Set<String> depts = FranceAdministrativeHelper.getDepartements(codeRegion);
 
-		HashMap<String, String> regions = FranceAdministrativeHelper.libellesRegionsParCodeInsee;
-		
+            for (String codeDpt : depts) {
+                try {
+                    departement = db.findNodesByLabelAndProperty(labelDepartement, "code", codeDpt).iterator().next();
+                } catch (Exception e) {
+                    departement = db.createNode(labelDepartement);
+                    departement.setProperty("code", codeDpt);
+                }
 
-		Iterator<String> it = regions.keySet().iterator();
-		String code = ""; // null ;
-		String lib = null;
-
-		Node region = null;
-		Node departement = null;
-
-		while (it.hasNext()) {
-			code = it.next();
-			Transaction tx = db.beginTx();
-
-			// creation région
-			try {
-				region = db.findNodesByLabelAndProperty(labelRegion, "code", code).iterator().next();
-			} catch (Exception e1) {
-				region = null;
-			}
-
-			if (region == null) {
-				region = db.createNode();
-				region.addLabel(labelRegion);
-				region.setProperty("code", code);
-				region.setProperty("name", regions.get(code));
-			}
-
-			
-			
-			// ses departements
-			Set<String> depts = FranceAdministrativeHelper.getDepartements(code);
-			Iterator<String> itDepts = depts.iterator();
-			String codeDpt;
-
-			while (itDepts.hasNext()) {
-				codeDpt = itDepts.next();
-				try {
-					departement = db.findNodesByLabelAndProperty(labelDepartement, "code", codeDpt).iterator().next();
-				} catch (Exception e) {
-					departement = null;
-				}
-
-				if (departement == null) {
-					departement = db.createNode(labelDepartement);
-					departement.setProperty("code", codeDpt);
-				}
-
-                                if ( !departement.hasProperty("name") ) 
-						departement.setProperty("name", FranceAdministrativeHelper.getDepartementLabel(codeDpt));
-
-				departement.createRelationshipTo(region, SITUE_DANS);
-			}
-
-			tx.success();
-			tx.close();
-		}
-
-		Date fin = new Date();
-		long delta = (fin.getTime() - deb.getTime()) / 1000;
-		System.out.println("Temps écoulé " + delta + " secondes");
-	}
+                if (!departement.hasProperty("name")) {
+                    departement.setProperty("name", FranceAdministrativeHelper.getDepartementLabel(codeDpt));
+                }
+                departement.createRelationshipTo(region, NosRelationshipTypes.SITUE_DANS);
+            }
+        }
+    }
 }
